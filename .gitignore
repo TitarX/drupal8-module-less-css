@@ -1,5 +1,3 @@
-# Object file
-*.o
+# Drupal 8 module
 
-# Ada Library Information
-*.ali
+*.idea/*

@@ -1,0 +1,4 @@
+administer less_css:
+  title: 'Администрирование настроек модуля LESS CSS'
+  description: 'Доступ к настройкам модуля LESS CSS (less_css).'
+  restrict access: true

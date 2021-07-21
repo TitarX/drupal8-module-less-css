@@ -1,0 +1,8 @@
+<?php
+
+/**
+ * Implements hook_install().
+ */
+function less_css_install() {
+  module_set_weight('less_css', 100);
+}

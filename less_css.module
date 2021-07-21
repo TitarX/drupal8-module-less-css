@@ -1,0 +1,105 @@
+<?php
+
+use Drupal\Core\Asset\AttachedAssetsInterface;
+
+/**
+ * Implements hook_css_alter().
+ */
+function less_css_css_alter(&$css, AttachedAssetsInterface $assets) {
+  foreach ($css as &$css_item_value) {
+    if (preg_match('/\.less$/u', $css_item_value['data']) === 1) {
+      less_css_generator_css($css_item_value);
+    }
+  }
+}
+
+function less_css_generator_css(&$less_file_data) {
+  $root_directory = $_SERVER["DOCUMENT_ROOT"];
+  $cache_id = \Drupal::state()->get('system.css_js_query_string');
+  $less_css_path = \Drupal::service('file_system')->realpath("public://");
+  $less_css_generate_directory = $less_css_path . '/less/' . $cache_id;
+  $css_file_path = $less_css_generate_directory . '/' . hash(
+      'md5',
+      $less_file_data['data']
+    ) . '.css';
+
+  require_once $root_directory . '/libraries/lessphp/lib/Less/Autoloader.php';
+  Less_Autoloader::register();
+
+  if (file_exists($css_file_path)) {
+    $less_file_data['data'] = str_replace(
+      $root_directory . '/',
+      '',
+      $css_file_path
+    );
+  }
+  else {
+    $config = \Drupal::config('less_css.settings');
+
+    $less_options = ['compress' => FALSE];
+    if ($config->get('compress')) {
+      $less_options['compress'] = TRUE;
+    }
+
+    $less_file_path = $root_directory . '/' . $less_file_data['data'];
+
+    $less_directory_path = explode('/', $less_file_data['data']);
+    array_pop($less_directory_path);
+    $less_directory_path = implode('/', $less_directory_path);
+    $less_directory_path = $root_directory . '/' . $less_directory_path . '/';
+
+    try {
+      $parser = new Less_Parser($less_options);
+      $parser->parseFile($less_file_path, $less_directory_path);
+      $css = $parser->getCss();
+
+      if (!file_exists($less_css_path . '/less')) {
+        \Drupal::service('file_system')->mkDir($less_css_path . '/less');
+      }
+
+      if (!file_exists($less_css_path . '/less/' . $cache_id)) {
+        \Drupal::service('file_system')->mkDir(
+          $less_css_path . '/less/' . $cache_id
+        );
+      }
+
+      file_put_contents($css_file_path, $css);
+
+      $less_file_data['data'] = str_replace(
+        $root_directory . '/',
+        '',
+        $css_file_path
+      );
+    } catch (Exception $e) {
+      $error_message = $e->getMessage();
+      drupal_set_message($error_message, 'error');
+    }
+  }
+}
+
+/**
+ * Implements hook_cache_flush().
+ */
+function less_css_cache_flush() {
+  less_css_clear_cache_css();
+}
+
+function less_css_clear_cache_css() {
+  $less_css_path = \Drupal::service('file_system')->realpath(
+    file_default_scheme() . "://"
+  );
+  $less_css_path .= '/less';
+  file_unmanaged_delete_recursive($less_css_path);
+}
+
+function drupal_flush_all_caches_less_css() {
+  foreach (
+    \Drupal\Core\Cache\Cache::getBins() as $service_id => $cache_backend
+  ) {
+    $cache_backend->deleteAll();
+  }
+
+  \Drupal::service('asset.css.collection_optimizer')->deleteAll();
+  \Drupal::service('asset.js.collection_optimizer')->deleteAll();
+  _drupal_flush_css_js();
+}

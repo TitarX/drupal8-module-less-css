@@ -1,0 +1,7 @@
+less_css.routing:
+  path: '/admin/config/system/less-css'
+  defaults:
+    _form: '\Drupal\less_css\Form\LessCssConfigForm'
+    _title: 'LESS'
+  requirements:
+    _permission: 'administer less_css'

@@ -1,0 +1,7 @@
+less_css.link:
+  title: 'LESS CSS'
+  description: 'LESS CSS'
+  menu_name: admin
+  parent: system.admin_config_development
+  route_name: less_css.routing
+  weight: 100

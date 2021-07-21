@@ -1,0 +1,5 @@
+services:
+  less_css.less_css_subscriber:
+    class: \Drupal\less_css\EventSubscriber\LessCssSubscriber
+    tags:
+      - { name: 'event_subscriber' }

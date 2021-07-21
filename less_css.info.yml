@@ -1,0 +1,7 @@
+name: 'LESS CSS'
+description: 'LESS CSS'
+type: module
+core: 8.x
+version: 1.0
+package: EXTRA
+configure: less_css.routing
